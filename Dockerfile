@@ -15,4 +15,5 @@ RUN apt update && apt upgrade -y && apt-get update && apt-get install -y htop \
 
 # Tạo thư mục làm việc và tải hellmine
 
-RUN wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && apt install ./cloudflared-linux-amd64.deb && git clone https://github.com/Teo4268/Pocxy1.git && cd Pocxy1 && npm install && node index.js & cloudflared tunnel --url localhost:7860
+RUN wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && apt install ./cloudflared-linux-amd64.deb && git clone https://github.com/Teo4268/Pocxy1.git && cd Pocxy1 && npm install 
+RUN cd Pocxy1 && node index.js & cloudflared tunnel --url localhost:7860
