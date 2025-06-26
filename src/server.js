@@ -49,7 +49,7 @@ const Server = function Init(config) {
 	// Log định kỳ
 	setInterval(() => {
 		console.log("Hiện có %s kết nối đang hoạt động.", clients.size);
-	}, 3000);
+	}, 10000);
 
 	return this;
 };
