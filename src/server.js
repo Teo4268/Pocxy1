@@ -47,9 +47,6 @@ const Server = function Init(config) {
 	WebSocketServer.on('connection', onConnection);
 
 	// Log định kỳ
-	setInterval(() => {
-		console.log("Hiện có %s kết nối đang hoạt động.", clients.size);
-	}, 10000);
 
 	return this;
 };
