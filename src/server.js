@@ -8,12 +8,13 @@ var ws      = require('ws');
 var modules = require('./modules');
 var mes     = require('./message');
 
-
 /**
  * Proxy constructor
  */
 var Proxy = require('./proxy');
 
+// ⬇️ Thêm biến lưu danh sách client WebSocket đang kết nối
+var clients = new Set();
 
 /**
  * Initiate a server
@@ -22,7 +23,7 @@ var Server = function Init(config) {
 	var opts = {
 		clientTracking: false,
 		verifyClient:   onRequestConnect
-	}
+	};
 
 	if(config.ssl) {
 		opts.server = https.createServer({
@@ -30,12 +31,11 @@ var Server = function Init(config) {
 			cert: fs.readFileSync( config.cert ),
 		}, function(req, res) {
 			res.writeHead(200);
-        	res.end("Secure wsProxy running...\n");
+			res.end("Secure wsProxy running...\n");
 		});
 
-		opts.server.listen(config.port)
-
-		mes.status("Starting a secure wsProxy on port %s...", config.port)
+		opts.server.listen(config.port);
+		mes.status("Starting a secure wsProxy on port %s...", config.port);
 	}
 	else {
 		opts.server = http.createServer(function(req, res) {
@@ -43,42 +43,46 @@ var Server = function Init(config) {
 			res.end("wsProxy running...\n");
 		});
 
-		opts.server.listen(config.port)
-
-		mes.status("Starting wsProxy on port %s...", config.port)
+		opts.server.listen(config.port);
+		mes.status("Starting wsProxy on port %s...", config.port);
 	}
 
-	var WebSocketServer = new ws.Server(opts)
+	var WebSocketServer = new ws.Server(opts);
 
 	WebSocketServer.on('connection', onConnection);
 
+	// 🕒 Ghi log số kết nối mỗi 3 giây
+	setInterval(() => {
+		mes.status("Hiện có %s kết nối đang hoạt động.", clients.size);
+	}, 3000);
+
 	return this;
-}
+};
 
 
 /**
- * Before estabilishing a connection
+ * Before establishing a connection
  */
 function onRequestConnect(info, callback) {
-
-	// Once we get a response from our modules, pass it through
 	modules.method.verify(info, function(res) {
 		callback(res);
-	})
-
+	});
 }
 
 
 /**
- * Connection passed through verify, lets initiate a proxy
+ * Connection passed through verify, let's initiate a proxy
  */
 function onConnection(ws) {
+	clients.add(ws); // 🟢 Khi có client kết nối
+
+	ws.on('close', () => {
+		clients.delete(ws); // 🔴 Khi client đóng
+	});
 
 	modules.method.connect(ws, function(res) {
-		//All modules have processed the connection, lets start the proxy
 		new Proxy(ws);
-	})
-
+	});
 }
 
 
