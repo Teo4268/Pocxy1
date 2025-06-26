@@ -47,6 +47,10 @@ const Server = function Init(config) {
 	WebSocketServer.on('connection', onConnection);
 
 	// Log định kỳ
+	// Log định kỳ số kết nối mỗi 10 giây
+	setInterval(() => {
+		console.log(`[STATS] Current WebSocket connections: ${clients.size}`);
+	}, 10000);
 
 	return this;
 };
