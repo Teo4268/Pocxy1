@@ -4,7 +4,6 @@ const CryptoJS = require('crypto-js');
  * Dependencies
  */
 var net        = require('net');
-var mes        = require('./message');
 var secretKey  = "64df901bab326cd3215f381da1f960d5f279b4d62442981dff7d12725f55dfa0";
 
 // Function to encrypt a message
