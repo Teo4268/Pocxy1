@@ -1,7 +1,4 @@
 name = "my-worker"
-compatibility_date = "2025-06-27"
+type = "javascript"
 main = "index.js"
-
-[build]
-command = "npm run build"
-upload.format = "modules"
+compatibility_date = "2025-06-27"
