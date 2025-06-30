@@ -1,86 +1,69 @@
 /**
  * Dependencies
  */
-var http    = require('http');
-var https   = require('https');
-var fs      = require('fs');
-var ws      = require('ws');
-var modules = require('./modules');
-var mes     = require('./message');
-
-
-/**
- * Proxy constructor
- */
-var Proxy = require('./proxy');
-
+const http    = require('http');
+const https   = require('https');
+const fs      = require('fs');
+const ws      = require('ws');
+const modules = require('./modules');
+const mes     = require('./message');
+const Proxy   = require('./proxy'); // Proxy constructor
 
 /**
  * Initiate a server
  */
-var Server = function Init(config) {
-	var opts = {
+const Server = function Init(config) {
+	const opts = {
 		clientTracking: false,
 		verifyClient:   onRequestConnect
-	}
+	};
 
-	if(config.ssl) {
+	if (config.ssl) {
 		opts.server = https.createServer({
-			key: fs.readFileSync( config.key ),
-			cert: fs.readFileSync( config.cert ),
-		}, function(req, res) {
+			key: fs.readFileSync(config.key),
+			cert: fs.readFileSync(config.cert),
+		}, (req, res) => {
 			res.writeHead(200);
-        	res.end("Secure wsProxy running...\n");
+			res.end("Secure wsProxy running...\n");
 		});
 
-		opts.server.listen(config.port)
-
-		mes.status("Starting a secure wsProxy on port %s...", config.port)
-	}
-	else {
-		opts.server = http.createServer(function(req, res) {
+		opts.server.listen(config.port);
+		mes.status("Starting a secure wsProxy on port %s...", config.port);
+	} else {
+		opts.server = http.createServer((req, res) => {
 			res.writeHead(200);
 			res.end("wsProxy running...\n");
 		});
 
-		opts.server.listen(config.port)
-
-		mes.status("Starting wsProxy on port %s...", config.port)
+		opts.server.listen(config.port);
+		mes.status("Starting wsProxy on port %s...", config.port);
 	}
 
-	var WebSocketServer = new ws.Server(opts)
+	const WebSocketServer = new ws.Server(opts);
 
+	// ✅ Phải khai báo (ws, req) để lấy req.url
 	WebSocketServer.on('connection', onConnection);
 
 	return this;
-}
-
+};
 
 /**
- * Before estabilishing a connection
+ * Xác minh trước khi cho kết nối vào
  */
 function onRequestConnect(info, callback) {
-
-	// Once we get a response from our modules, pass it through
-	modules.method.verify(info, function(res) {
+	modules.method.verify(info, (res) => {
 		callback(res);
-	})
-
+	});
 }
-
 
 /**
- * Connection passed through verify, lets initiate a proxy
+ * Khi đã xác minh xong, tạo kết nối Proxy
  */
-function onConnection(ws) {
-
-	modules.method.connect(ws, function(res) {
-		//All modules have processed the connection, lets start the proxy
-		new Proxy(ws);
-	})
-
+function onConnection(ws, req) {
+	modules.method.connect(ws, (res) => {
+		new Proxy(ws, req); // ✅ Truyền thêm `req`
+	});
 }
-
 
 /**
  * Exports
