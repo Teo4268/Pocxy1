@@ -1,70 +1,88 @@
-const http = require('http');
-const https = require('https');
-const fs = require('fs');
-const ws = require('ws');
-const modules = require('./modules');
-const Proxy = require('./proxy');
+/**
+ * Dependencies
+ */
+var http    = require('http');
+var https   = require('https');
+var fs      = require('fs');
+var ws      = require('ws');
+var modules = require('./modules');
+var mes     = require('./message');
 
-const clients = new Set();
 
-const Server = function Init(config) {
-	const opts = {
+/**
+ * Proxy constructor
+ */
+var Proxy = require('./proxy');
+
+
+/**
+ * Initiate a server
+ */
+var Server = function Init(config) {
+	var opts = {
 		clientTracking: false,
-		verifyClient: onRequestConnect,
-	};
-
-	if (config.ssl) {
-		opts.server = https.createServer(
-			{
-				key: fs.readFileSync(config.key),
-				cert: fs.readFileSync(config.cert),
-			},
-			(req, res) => {
-				if (req.url === '/stats') {
-					res.writeHead(200, { 'Content-Type': 'application/json' });
-					res.end(JSON.stringify({ connections: clients.size }));
-				} else {
-					res.writeHead(200);
-					res.end();
-				}
-			}
-		);
-		opts.server.listen(config.port);
-	} else {
-		opts.server = http.createServer((req, res) => {
-			if (req.url === '/stats') {
-				res.writeHead(200, { 'Content-Type': 'application/json' });
-				res.end(JSON.stringify({ connections: clients.size }));
-			} else {
-				res.writeHead(200);
-				res.end();
-			}
-		});
-		opts.server.listen(config.port);
+		verifyClient:   onRequestConnect
 	}
 
-	const WebSocketServer = new ws.Server(opts);
+	if(config.ssl) {
+		opts.server = https.createServer({
+			key: fs.readFileSync( config.key ),
+			cert: fs.readFileSync( config.cert ),
+		}, function(req, res) {
+			res.writeHead(200);
+        	res.end("Secure wsProxy running...\n");
+		});
+
+		opts.server.listen(config.port)
+
+		mes.status("Starting a secure wsProxy on port %s...", config.port)
+	}
+	else {
+		opts.server = http.createServer(function(req, res) {
+			res.writeHead(200);
+			res.end("wsProxy running...\n");
+		});
+
+		opts.server.listen(config.port)
+
+		mes.status("Starting wsProxy on port %s...", config.port)
+	}
+
+	var WebSocketServer = new ws.Server(opts)
+
 	WebSocketServer.on('connection', onConnection);
 
-	// Log định kỳ
-	// Log định kỳ số kết nối mỗi 10 giây
-	setInterval(() => {
-		console.log(`[STATS] Current WebSocket connections: ${clients.size}`);
-	}, 10000);
-
 	return this;
-};
+}
 
+
+/**
+ * Before estabilishing a connection
+ */
 function onRequestConnect(info, callback) {
-	modules.method.verify(info, (res) => {
+
+	// Once we get a response from our modules, pass it through
+	modules.method.verify(info, function(res) {
 		callback(res);
-	});
+	})
+
 }
 
+
+/**
+ * Connection passed through verify, lets initiate a proxy
+ */
 function onConnection(ws) {
-	clients.add(ws);
-	ws.on('close', () => clients.delete(ws));
-	modules.method.connect(ws, () => new Proxy(ws));
+
+	modules.method.connect(ws, function(res) {
+		//All modules have processed the connection, lets start the proxy
+		new Proxy(ws);
+	})
+
 }
 
+
+/**
+ * Exports
+ */
 module.exports = Server;

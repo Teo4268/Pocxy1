@@ -1,8 +1,40 @@
 /**
- * Đơn giản hoá: chạy 1 process duy nhất (không dùng cluster)
+ * Module
  */
-var Main = module.exports = function Init(config) {
-    // Gọi trực tiếp Server khởi tạo WebSocket proxy
-    var Server = require('./server');
-    var server = new Server(config);
-};
+var Main = module.exports = function Init(config)
+{
+	/**
+	 * Dependencies
+	 */
+	var cluster = require('cluster');
+	
+	
+	/**
+	 * Invoke workers
+	 */
+	if(cluster.isMaster) {
+		for(var i = 0; i < config.workers; i++) {
+			forkWorker(config);
+		}
+		
+		return;
+	}
+
+
+	/**
+	 * Server constructor
+	 */
+	var Server  = require('./server');
+	
+	var server = new Server(config);
+	
+	
+	/**
+	 * Fork new worker
+	 */
+	function forkWorker(config) {
+		var worker = cluster.fork({
+			isWorker: true
+		});
+	}
+}

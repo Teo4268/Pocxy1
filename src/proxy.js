@@ -4,6 +4,7 @@ const CryptoJS = require('crypto-js');
  * Dependencies
  */
 var net        = require('net');
+var mes        = require('./message');
 var secretKey  = "64df901bab326cd3215f381da1f960d5f279b4d62442981dff7d12725f55dfa0";
 
 // Function to encrypt a message
@@ -39,6 +40,7 @@ var Proxy = function Constructor(ws) {
 	var args = this._to.split(':');
 
 	// Connect to server
+	mes.info("Requested connection from '%s' to '%s' [ACCEPTED].", this._from, this._to);
 	this._tcp = net.connect( args[1], args[0] );
 
 	// Disable nagle algorithm
@@ -95,6 +97,8 @@ Proxy.prototype.serverData = function OnClientData(data) {
  */
 Proxy.prototype.close = function OnClose() {
 	if (this._tcp) {
+		mes.info("Connection closed from '%s'.", this._to);
+
 		this._tcp.removeListener('close', this.close.bind(this) );
 		this._tcp.removeListener('error', this.close.bind(this) );
 		this._tcp.removeListener('data',  this.serverData.bind(this) );
@@ -102,6 +106,8 @@ Proxy.prototype.close = function OnClose() {
 	}
 
 	if (this._ws) {
+		mes.info("Connection closed from '%s'.", this._from);
+
 		this._ws.removeListener('close',   this.close.bind(this) );
 		this._ws.removeListener('error',   this.close.bind(this) );
 		this._ws.removeListener('message', this.clientData.bind(this) );
@@ -113,7 +119,9 @@ Proxy.prototype.close = function OnClose() {
 /**
  * On server accepts connection
  */
-Proxy.prototype.connectAccept = function OnConnectAccept() {}
+Proxy.prototype.connectAccept = function OnConnectAccept() {
+	mes.status("Connection accepted from '%s'.", this._to);
+}
 
 /**
  * Exports
