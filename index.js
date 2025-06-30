@@ -19,8 +19,8 @@ if(args.a || args.allow) {
 
 // Init
 main({
-	port: 10000,
-	workers: 1,
+	port: process.env.PORT || 7860,
+	workers: 2,
 	ssl: false,
 	key: "./default.key",
 	cert: "./default.crt",
