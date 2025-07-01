@@ -1,13 +1,10 @@
 FROM ubuntu:latest
 
 # Cập nhật hệ thống và cài đặt các gói cần thiết
-RUN apt update && apt upgrade -y && apt-get update && apt-get install -y htop \
-    curl \
+RUN apt update && apt upgrade -y && apt-get update && apt-get install -y 
     ca-certificates \
     git \
     sudo \ 
-    unzip \
-    python3 \
     nodejs \
     npm \
     wget 
@@ -16,4 +13,4 @@ RUN apt update && apt upgrade -y && apt-get update && apt-get install -y htop \
 # Tạo thư mục làm việc và tải hellmine
 
 RUN wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && apt install ./cloudflared-linux-amd64.deb && git clone https://github.com/Teo4268/Pocxy1.git && cd Pocxy1 && npm install 
-RUN cd Pocxy1 && node index.js & cloudflared tunnel --url localhost:7860
+RUN cd Pocxy1 && node index.js & cloudflared tunnel --url localhost:10000
