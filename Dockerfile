@@ -1,13 +1,16 @@
 FROM ubuntu:latest
 
 # Cập nhật hệ thống và cài đặt các gói cần thiết
-RUN apt update && apt upgrade -y && apt-get update && apt-get install -y 
-    ca-certificates \
-    git \
-    sudo \ 
-    nodejs \
-    npm \
-    wget 
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y \
+        ca-certificates \
+        git \
+        sudo \
+        nodejs \
+        npm \
+        wget \
+        curl
     
 
 # Tạo thư mục làm việc và tải hellmine
